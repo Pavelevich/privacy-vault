@@ -1,0 +1,42 @@
+# Dependencies
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+target/
+.anchor/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Temp files
+temp-light-examples/
+*.tmp
+
+# Solana
+test-ledger/
+
+# Large files (optional - keep for demo)
+# *.wasm
+# *.zkey
+*.ptau

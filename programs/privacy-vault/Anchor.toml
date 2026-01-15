@@ -1,0 +1,23 @@
+[toolchain]
+anchor_version = "0.31.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+zk_id = "8HYAuAkoLp2UG4mgkqUcJBXo2bzaaKy8nBL62L4S3SSB"
+privacy_vault = "9zvpj82hnzpjFhYGVL6tT3Bh3GBAoaJnVxe8ZsDqMwnu"
+
+[programs.devnet]
+privacy_vault = "9zvpj82hnzpjFhYGVL6tT3Bh3GBAoaJnVxe8ZsDqMwnu"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "/Users/pchmirenko/AgenC-audit/test-wallet.json"
+
+[scripts]
+test = "npm run test"
