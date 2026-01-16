@@ -33,8 +33,8 @@ const Index = () => {
       <Header isConnected={connected} walletAddress={walletAddress} onConnect={handleConnect} onDisconnect={handleDisconnect} />
 
       {/* Main Content */}
-      <main className="relative z-10 min-h-screen min-h-[100dvh] flex flex-col items-center justify-center px-3 sm:px-4 pt-16 sm:pt-20 pb-20 sm:pb-24">
-        {/* Hero Text */}
+      <main className="relative z-10 min-h-screen min-h-[100dvh] flex flex-col items-center justify-start sm:justify-center px-3 sm:px-4 pt-20 sm:pt-20 pb-20 sm:pb-24">
+        {/* Hero Text - Hidden on mobile for app-like experience */}
         <motion.div initial={{
         opacity: 0,
         y: 20
@@ -43,11 +43,11 @@ const Index = () => {
         y: 0
       }} transition={{
         duration: 0.5
-      }} className="text-center mb-6 sm:mb-8 px-2">
-          <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-3 sm:mb-4 leading-tight">
-            HIDE TRANSACTIONS.<br className="sm:hidden" /> PROVE INNOCENCE.
+      }} className="hidden sm:block text-center mb-8 px-2">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 leading-tight">
+            HIDE TRANSACTIONS. PROVE INNOCENCE.
           </h1>
-          <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
             Prove your funds are clean — without revealing your deposit.
           </p>
         </motion.div>
