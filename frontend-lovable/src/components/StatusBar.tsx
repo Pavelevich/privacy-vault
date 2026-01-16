@@ -1,4 +1,4 @@
-import { Circle } from "lucide-react";
+import { Circle, Github } from "lucide-react";
 
 // X (Twitter) icon component
 const XIcon = ({ className }: { className?: string }) => (
@@ -17,16 +17,25 @@ export const StatusBar = () => {
           <span className="text-sm text-muted-foreground">Devnet</span>
         </div>
 
-        {/* X Social Link */}
-        <a
-          href="https://x.com/tetsuoarena"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <XIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">@tetsuoarena</span>
-        </a>
+        {/* Social Links */}
+        <div className="flex items-center gap-4">
+          <a
+            href="https://github.com/Pavelevich/privacy-vault"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Github className="h-5 w-5" />
+          </a>
+          <a
+            href="https://x.com/tetsuoarena"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <XIcon className="h-5 w-5" />
+          </a>
+        </div>
       </div>
     </div>
   );
