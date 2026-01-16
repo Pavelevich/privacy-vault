@@ -11,11 +11,17 @@
 </p>
 
 <p align="center">
+  <a href="https://cleanproof.xyz">Live App</a> •
+  <a href="https://github.com/Pavelevich/cleanproof-frontend">Frontend</a> •
   <a href="#features">Features</a> •
-  <a href="#how-it-works">How It Works</a> •
   <a href="#architecture">Architecture</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#demo">Demo</a>
+  <a href="#quick-start">Quick Start</a>
+</p>
+
+<p align="center">
+  <a href="https://cleanproof.xyz">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Demo-cleanproof.xyz-00D4AA?style=for-the-badge" alt="Live Demo"/>
+  </a>
 </p>
 
 ---
@@ -263,6 +269,15 @@ Or use the faucet: https://faucet.solana.com
 
 ---
 
+## Related Repositories
+
+| Repository | Description |
+|------------|-------------|
+| **[privacy-vault](https://github.com/Pavelevich/privacy-vault)** | This repository - Smart contracts, ZK circuits, relayer |
+| **[cleanproof-frontend](https://github.com/Pavelevich/cleanproof-frontend)** | React frontend application |
+
+---
+
 ## Research & References
 
 This project implements concepts from:
@@ -299,7 +314,13 @@ MIT License - See [LICENSE](LICENSE) for details.
 </p>
 
 <p align="center">
-  <a href="https://github.com/Pavelevich/privacy-vault">
-    <img src="https://img.shields.io/github/stars/Pavelevich/privacy-vault?style=social" alt="GitHub Stars"/>
+  <a href="https://cleanproof.xyz">
+    <img src="https://img.shields.io/badge/Website-cleanproof.xyz-9945FF?style=for-the-badge" alt="Website"/>
+  </a>
+  <a href="https://github.com/Pavelevich/cleanproof-frontend">
+    <img src="https://img.shields.io/badge/Frontend-cleanproof--frontend-181717?style=for-the-badge&logo=github" alt="Frontend"/>
+  </a>
+  <a href="https://x.com/i/communities/1863652235382755685">
+    <img src="https://img.shields.io/badge/Community-X-000000?style=for-the-badge&logo=x" alt="X Community"/>
   </a>
 </p>
