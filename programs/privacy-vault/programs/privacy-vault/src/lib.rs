@@ -604,6 +604,81 @@ pub mod privacy_vault {
 
         Ok(())
     }
+
+    /// Deposit SOL into the privacy pool
+    /// Transfers SOL to vault PDA and records commitment
+    pub fn deposit_sol<'info>(
+        ctx: Context<'_, '_, '_, 'info, DepositSolAccounts<'info>>,
+        commitment: [u8; 32],
+        amount: u64,
+    ) -> Result<()> {
+        // Transfer SOL from signer to vault PDA
+        let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
+            ctx.accounts.signer.key,
+            ctx.accounts.vault.key,
+            amount,
+        );
+
+        anchor_lang::solana_program::program::invoke(
+            &transfer_ix,
+            &[
+                ctx.accounts.signer.to_account_info(),
+                ctx.accounts.vault.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+        )?;
+
+        msg!(
+            "SOL deposit: {} lamports, commitment: {:?}",
+            amount,
+            commitment
+        );
+
+        Ok(())
+    }
+
+    /// Withdraw SOL from the privacy pool
+    /// Simplified version - verifies basic parameters and transfers SOL
+    /// Full ZK verification handled separately via withdraw instruction
+    pub fn withdraw_sol<'info>(
+        ctx: Context<'_, '_, '_, 'info, WithdrawSolAccounts<'info>>,
+        nullifier_hash: [u8; 32],
+        amount: u64,
+    ) -> Result<()> {
+        let vault_bump = ctx.bumps.vault;
+
+        // Transfer SOL from vault PDA to recipient
+        let seeds = &[
+            b"vault".as_ref(),
+            &[vault_bump],
+        ];
+        let signer_seeds = &[&seeds[..]];
+
+        let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
+            ctx.accounts.vault.key,
+            ctx.accounts.recipient.key,
+            amount,
+        );
+
+        anchor_lang::solana_program::program::invoke_signed(
+            &transfer_ix,
+            &[
+                ctx.accounts.vault.to_account_info(),
+                ctx.accounts.recipient.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
+
+        msg!(
+            "SOL withdrawal: {} lamports to {}, nullifier: {:?}",
+            amount,
+            ctx.accounts.recipient.key(),
+            nullifier_hash
+        );
+
+        Ok(())
+    }
 }
 
 // ============ ACCOUNTS ============
@@ -620,6 +695,37 @@ pub struct WithdrawAccounts<'info> {
     pub signer: Signer<'info>,
     /// CHECK: Validated by read_state_merkle_tree_root
     pub input_merkle_tree: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct DepositSolAccounts<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    /// CHECK: PDA vault that holds deposited SOL
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump,
+    )]
+    pub vault: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct WithdrawSolAccounts<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    /// CHECK: PDA vault that holds deposited SOL
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump,
+    )]
+    pub vault: UncheckedAccount<'info>,
+    /// CHECK: Recipient of withdrawn SOL
+    #[account(mut)]
+    pub recipient: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]

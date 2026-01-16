@@ -92,9 +92,12 @@ export const WithdrawTab = ({ isConnected, walletAddress, onConnect }: WithdrawT
 
       if (result.success) {
         setWithdrawSuccess(true);
+        const txDescription = result.signature
+          ? `Tx: ${result.signature.slice(0, 8)}...${result.signature.slice(-8)}`
+          : `Funds sent to ${recipient.slice(0, 8)}...`;
         toast({
           title: "Withdrawal Successful!",
-          description: `ZK proof verified. Funds sent to ${recipient.slice(0, 8)}...`,
+          description: `ZK proof verified. ${txDescription}`,
         });
 
         // Reset form after success

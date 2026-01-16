@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram } from "@solana/web3.js";
+import { PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 import {
   generateDepositSecrets,
   computeCommitment,
@@ -21,6 +21,62 @@ const PROGRAM_ID = "9zvpj82hnzpjFhYGVL6tT3Bh3GBAoaJnVxe8ZsDqMwnu";
 
 // Vault PDA seed
 const VAULT_SEED = "vault";
+
+// Instruction discriminators (first 8 bytes of sha256("global:instruction_name"))
+const DEPOSIT_SOL_DISCRIMINATOR = Buffer.from([108, 81, 78, 117, 125, 155, 56, 200]);
+const WITHDRAW_SOL_DISCRIMINATOR = Buffer.from([145, 131, 74, 136, 65, 137, 42, 38]);
+
+// Build deposit_sol instruction
+function buildDepositSolInstruction(
+  programId: PublicKey,
+  signer: PublicKey,
+  vault: PublicKey,
+  commitment: Uint8Array,
+  amount: bigint
+): TransactionInstruction {
+  // Serialize: discriminator (8) + commitment (32) + amount (8)
+  const data = Buffer.alloc(8 + 32 + 8);
+  DEPOSIT_SOL_DISCRIMINATOR.copy(data, 0);
+  data.set(commitment, 8);
+  data.writeBigUInt64LE(amount, 40);
+
+  return new TransactionInstruction({
+    programId,
+    keys: [
+      { pubkey: signer, isSigner: true, isWritable: true },
+      { pubkey: vault, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data,
+  });
+}
+
+// Build withdraw_sol instruction
+function buildWithdrawSolInstruction(
+  programId: PublicKey,
+  signer: PublicKey,
+  vault: PublicKey,
+  recipient: PublicKey,
+  nullifierHash: Uint8Array,
+  amount: bigint
+): TransactionInstruction {
+  // Serialize: discriminator (8) + nullifier_hash (32) + amount (8)
+  const data = Buffer.alloc(8 + 32 + 8);
+  WITHDRAW_SOL_DISCRIMINATOR.copy(data, 0);
+  data.set(nullifierHash, 8);
+  data.writeBigUInt64LE(amount, 40);
+
+  return new TransactionInstruction({
+    programId,
+    keys: [
+      { pubkey: signer, isSigner: true, isWritable: true },
+      { pubkey: vault, isSigner: false, isWritable: true },
+      { pubkey: recipient, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    data,
+  });
+}
 
 export interface DepositResult {
   note: DepositNote;
@@ -106,22 +162,30 @@ export function usePrivacyVault() {
         // Add commitment to deposit store
         depositStore.push(commitment);
 
-        // Create SOL transfer transaction to vault
-        // In production, this would be a CPI to the program
+        // Create deposit instruction to vault
         const vaultPDA = getVaultPDA();
-        if (!vaultPDA) {
-          throw new Error("Could not derive vault PDA");
+        if (!vaultPDA || !programId) {
+          throw new Error("Could not derive vault PDA or program ID");
         }
 
-        const amountLamports = amountSol * LAMPORTS_PER_SOL;
+        const amountLamports = BigInt(Math.floor(amountSol * LAMPORTS_PER_SOL));
 
-        const transaction = new Transaction().add(
-          SystemProgram.transfer({
-            fromPubkey: wallet.publicKey,
-            toPubkey: vaultPDA,
-            lamports: amountLamports,
-          })
+        // Convert commitment to 32-byte array
+        const commitmentBytes = new Uint8Array(32);
+        const commitmentHex = commitment.toString(16).padStart(64, '0');
+        for (let i = 0; i < 32; i++) {
+          commitmentBytes[i] = parseInt(commitmentHex.substr(i * 2, 2), 16);
+        }
+
+        const depositInstruction = buildDepositSolInstruction(
+          programId,
+          wallet.publicKey,
+          vaultPDA,
+          commitmentBytes,
+          amountLamports
         );
+
+        const transaction = new Transaction().add(depositInstruction);
 
         // Get recent blockhash with commitment
         const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
@@ -169,8 +233,13 @@ export function usePrivacyVault() {
   // Withdraw funds from the privacy pool
   const withdraw = useCallback(
     async (noteString: string, recipientAddress: string): Promise<WithdrawResult> => {
-      if (!wallet.publicKey) {
+      if (!wallet.publicKey || !wallet.signTransaction) {
         throw new Error("Wallet not connected");
+      }
+
+      // Prevent double submission
+      if (isLoading) {
+        throw new Error("Transaction already in progress");
       }
 
       setIsLoading(true);
@@ -185,6 +254,7 @@ export function usePrivacyVault() {
         const nullifier = BigInt(note.nullifier);
         const secret = BigInt(note.secret);
         const commitment = BigInt(note.commitment);
+        const withdrawAmount = note.amount;
 
         // Add commitment to deposit store if not present
         // This handles the case where the page was refreshed after deposit
@@ -234,14 +304,62 @@ export function usePrivacyVault() {
         // Convert proof to Solana format
         const solanaProof = proofToSolanaFormat(proof);
 
-        // In production: Submit proof to on-chain program for verification
-        // For demo, we simulate success
-        console.log("Withdrawal processed successfully");
+        console.log("ZK proof verified successfully, initiating transfer...");
+
+        // Get vault PDA
+        const vaultPDA = getVaultPDA();
+        if (!vaultPDA || !programId) {
+          throw new Error("Could not derive vault PDA or program ID");
+        }
+
+        // Convert nullifier hash to 32-byte array
+        const nullifierHashBytes = new Uint8Array(32);
+        const nullifierHashHex = nullifierHash.toString(16).padStart(64, '0');
+        for (let i = 0; i < 32; i++) {
+          nullifierHashBytes[i] = parseInt(nullifierHashHex.substr(i * 2, 2), 16);
+        }
+
+        const amountLamports = BigInt(Math.floor(withdrawAmount * LAMPORTS_PER_SOL));
+        const recipientPubkeyForTransfer = new PublicKey(recipientAddress);
+
+        // Build withdraw instruction - program transfers from vault to recipient
+        const withdrawInstruction = buildWithdrawSolInstruction(
+          programId,
+          wallet.publicKey,
+          vaultPDA,
+          recipientPubkeyForTransfer,
+          nullifierHashBytes,
+          amountLamports
+        );
+
+        const transaction = new Transaction().add(withdrawInstruction);
+
+        // Get recent blockhash
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = wallet.publicKey;
+
+        // Sign and send
+        const signedTx = await wallet.signTransaction(transaction);
+        const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: "confirmed",
+          maxRetries: 3,
+        });
+
+        await connection.confirmTransaction({
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        }, "confirmed");
+
+        console.log("Withdrawal transaction confirmed:", signature);
 
         return {
           nullifierHash: nullifierHash.toString(),
           recipient: recipientAddress,
           proof: solanaProof,
+          signature,
           success: true,
         };
       } catch (error) {
@@ -251,7 +369,7 @@ export function usePrivacyVault() {
         setIsLoading(false);
       }
     },
-    [wallet.publicKey]
+    [wallet.publicKey, wallet.signTransaction, connection, programId, getVaultPDA]
   );
 
   // Prove innocence (membership in association set)
