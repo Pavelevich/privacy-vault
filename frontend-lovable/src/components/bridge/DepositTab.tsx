@@ -322,11 +322,16 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
               <div className="flex items-center justify-between">
                 <Input
                   type="text"
+                  inputMode="decimal"
                   placeholder="0.0"
                   value={amount}
                   onChange={(e) => {
-                    setAmount(e.target.value);
-                    setSelectedDenom(null);
+                    const value = e.target.value;
+                    // Only allow numbers and one decimal point
+                    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                      setAmount(value);
+                      setSelectedDenom(null);
+                    }
                   }}
                   className="bg-transparent border-0 border-b-2 border-transparent focus:border-primary text-2xl font-medium flex-1 p-0 h-auto focus-visible:ring-0 rounded-none transition-colors"
                 />
