@@ -228,7 +228,7 @@ export const WithdrawTab = ({ isConnected, walletAddress, onConnect }: WithdrawT
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-xs text-amber-300"
+              className="bg-amber-900/30 border border-amber-700/30 rounded-lg p-2 text-xs text-amber-800"
             >
               Relayer mode: Your recipient address won't appear as the transaction payer
             </motion.div>

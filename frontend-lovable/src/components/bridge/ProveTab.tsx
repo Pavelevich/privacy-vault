@@ -240,7 +240,7 @@ export const ProveTab = ({ isConnected, onConnect }: ProveTabProps) => {
               <SelectItem value="all">
                 <div className="flex items-center gap-2">
                   <span>All Verified Deposits</span>
-                  <span className="text-xs text-green-400">(Recommended)</span>
+                  <span className="text-xs text-emerald-700 font-medium">(Recommended)</span>
                 </div>
               </SelectItem>
               <SelectItem value="institutional">Institutional Compliant</SelectItem>
@@ -257,8 +257,8 @@ export const ProveTab = ({ isConnected, onConnect }: ProveTabProps) => {
               <span>{ASSOCIATION_SETS[associationSet as keyof typeof ASSOCIATION_SETS].provider}</span>
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                 ASSOCIATION_SETS[associationSet as keyof typeof ASSOCIATION_SETS].trustLevel === "high"
-                  ? "bg-green-500/20 text-green-400"
-                  : "bg-amber-500/20 text-amber-400"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-amber-100 text-amber-800"
               }`}>
                 {ASSOCIATION_SETS[associationSet as keyof typeof ASSOCIATION_SETS].trustLevel.toUpperCase()}
               </span>
@@ -274,13 +274,13 @@ export const ProveTab = ({ isConnected, onConnect }: ProveTabProps) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 space-y-3"
+              className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3"
             >
-              <div className="flex items-center gap-2 text-green-400">
+              <div className="flex items-center gap-2 text-emerald-700">
                 <Check className="h-5 w-5" />
                 <span className="font-semibold">Proof Generated</span>
               </div>
-              <div className="text-xs text-green-300/80 space-y-1">
+              <div className="text-xs text-emerald-800/80 space-y-1">
                 <p>Nullifier: {proofData.nullifierHash.slice(0, 20)}...</p>
                 <p>Association Set: {ASSOCIATION_SETS[associationSet as keyof typeof ASSOCIATION_SETS].name}</p>
                 <p>Proof: {proofData.proofHex}</p>
