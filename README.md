@@ -1,200 +1,305 @@
-# Privacy Vault
+<p align="center">
+  <img src="https://img.shields.io/badge/Solana-Privacy%20Hack%202026-9945FF?style=for-the-badge&logo=solana&logoColor=white" alt="Solana Privacy Hack 2026"/>
+  <img src="https://img.shields.io/badge/ZK-Groth16-00D4AA?style=for-the-badge" alt="ZK Proofs"/>
+  <img src="https://img.shields.io/badge/Light%20Protocol-Compressed%20Accounts-FF6B6B?style=for-the-badge" alt="Light Protocol"/>
+</p>
 
-> **Private transactions with Proof of Innocence on Solana**
+<h1 align="center">Privacy Vault</h1>
 
-Privacy Vault enables anonymous deposits and withdrawals on Solana while allowing users to cryptographically prove their funds are not associated with illicit activity. Built on Vitalik Buterin's Privacy Pools research paper.
+<p align="center">
+  <strong>Private Transactions with Proof of Innocence on Solana</strong>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#how-it-works">How It Works</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#demo">Demo</a>
+</p>
+
+---
 
 ## The Problem
 
-Traditional mixers face a critical dilemma:
-- **Full privacy** = Criminals can launder money anonymously
-- **Full compliance** = Users lose financial privacy
+Traditional privacy solutions face an impossible choice:
 
-Privacy Vault solves this with **selective transparency**: users can prove innocence without revealing their identity.
+| Approach | Privacy | Compliance | Result |
+|----------|---------|------------|--------|
+| **Full Transparency** | None | Full | Users exposed |
+| **Full Privacy (Mixers)** | Full | None | Criminals exploit |
+| **Privacy Vault** | Full | Selective | Best of both worlds |
+
+**Privacy Vault** implements [Vitalik Buterin's Privacy Pools](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4563364) research: users maintain complete anonymity while being able to cryptographically prove their funds aren't associated with illicit activity.
+
+---
+
+## Features
+
+<table>
+<tr>
+<td width="50%">
+
+### Zero-Knowledge Proofs
+- **Groth16** proof generation (~300ms in browser)
+- Withdraw without revealing deposit source
+- Prove innocence without revealing identity
+
+</td>
+<td width="50%">
+
+### Association Sets
+- Multiple compliance tiers
+- Chain analysis integration ready
+- DAO-governed whitelists support
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### Compressed Accounts
+- **Light Protocol** integration
+- Scalable on-chain storage
+- Reduced transaction costs
+
+</td>
+<td width="50%">
+
+### Privacy-First Design
+- Fixed denomination pools
+- Optional relayer (gas privacy)
+- SPL token support
+
+</td>
+</tr>
+</table>
+
+---
 
 ## How It Works
 
 ```
-1. DEPOSIT          2. WITHDRAW             3. PROVE INNOCENCE
-   ┌─────────┐         ┌─────────┐            ┌─────────┐
-   │ 1 SOL   │  ──▶   │ ZK Proof │   ──▶     │ ZK Proof │
-   │ deposit │         │ + secret │            │ + assoc. │
-   └─────────┘         │ note     │            │ set      │
-        │              └─────────┘            └─────────┘
-        ▼                   │                      │
-   ┌─────────┐              ▼                      ▼
-   │Compressed│         ┌─────────┐          ┌─────────┐
-   │ Account  │         │ 1 SOL   │          │ "I'm in │
-   │ (Light)  │         │ received│          │  clean  │
-   └─────────┘         └─────────┘          │  set"   │
-                                             └─────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              PRIVACY VAULT FLOW                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────┐         ┌──────────────┐         ┌──────────────┐
+  │   DEPOSIT    │         │   WITHDRAW   │         │    PROVE     │
+  │              │         │              │         │  INNOCENCE   │
+  │  ┌────────┐  │         │  ┌────────┐  │         │  ┌────────┐  │
+  │  │ 1 SOL  │  │         │  │ Secret │  │         │  │ Assoc. │  │
+  │  │        │──┼────────▶│  │  Note  │──┼────────▶│  │  Set   │  │
+  │  └────────┘  │         │  └────────┘  │         │  └────────┘  │
+  │      │       │         │      │       │         │      │       │
+  │      ▼       │         │      ▼       │         │      ▼       │
+  │  ┌────────┐  │         │  ┌────────┐  │         │  ┌────────┐  │
+  │  │Commit- │  │         │  │ZK Proof│  │         │  │ZK Proof│  │
+  │  │  ment  │  │         │  │Generated│ │         │  │ "I'm   │  │
+  │  │ Hash   │  │         │  │        │  │         │  │ Clean" │  │
+  │  └────────┘  │         │  └────────┘  │         │  └────────┘  │
+  └──────────────┘         └──────────────┘         └──────────────┘
+         │                        │                        │
+         │    Compressed          │   Anonymous            │   Verifiable
+         │    Account             │   Withdrawal           │   Compliance
+         ▼                        ▼                        ▼
+  ┌─────────────────────────────────────────────────────────────────┐
+  │                     SOLANA BLOCKCHAIN                           │
+  │                   Light Protocol + ZK Verifier                  │
+  └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Zero-Knowledge Magic
+### The Magic of Zero-Knowledge
 
-- **Deposit**: Creates a cryptographic commitment (hash of secret + nullifier)
-- **Withdraw**: Proves you know a valid secret WITHOUT revealing which deposit is yours
-- **Prove Innocence**: Proves your deposit is in a "clean" association set WITHOUT revealing your identity
+| Step | What Happens | What's Proven | What's Hidden |
+|------|--------------|---------------|---------------|
+| **Deposit** | Create commitment hash | Funds locked | Secret + Nullifier |
+| **Withdraw** | Submit ZK proof | Valid deposit exists | Which deposit is yours |
+| **Prove** | Submit innocence proof | You're in clean set | Your identity |
 
-## Key Features
-
-- **ZK Proof Generation** - Groth16 proofs in ~300ms (browser-based)
-- **Compressed Accounts** - Uses Light Protocol for scalable on-chain storage
-- **Fixed Denomination Pools** - Larger anonymity sets (0.1, 1, 10 SOL pools)
-- **Association Sets** - Multiple compliance tiers (verified, institutional, regional)
-- **Relayer Support** - Optional relayer pays gas for maximum privacy
-- **SPL Token Support** - USDC, TETSUO, BONK pools (coming soon)
+---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         FRONTEND                             │
-│  React + Vite + TailwindCSS + Framer Motion                 │
-│  ┌─────────┐  ┌──────────┐  ┌───────────────┐               │
-│  │ Deposit │  │ Withdraw │  │ Prove         │               │
-│  │   Tab   │  │   Tab    │  │ Innocence Tab │               │
-│  └────┬────┘  └────┬─────┘  └───────┬───────┘               │
-└───────┼────────────┼────────────────┼───────────────────────┘
-        │            │                │
-        ▼            ▼                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      ZK PROOF LAYER                          │
-│              snarkjs + Groth16 (Browser WASM)               │
-│  ┌─────────────────┐     ┌─────────────────────┐            │
-│  │ withdraw.wasm   │     │ innocence.wasm      │            │
-│  │ withdraw.zkey   │     │ innocence.zkey      │            │
-│  └─────────────────┘     └─────────────────────┘            │
-└─────────────────────────────────────────────────────────────┘
-        │            │                │
-        ▼            ▼                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    SOLANA BLOCKCHAIN                         │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Privacy Vault Program                   │    │
-│  │  • deposit()      - Create compressed commitment     │    │
-│  │  • withdraw()     - Verify ZK proof + send funds     │    │
-│  │  • deposit_token() - SPL token deposits              │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                           │                                  │
-│                           ▼                                  │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Light Protocol                          │    │
-│  │         Compressed Accounts (ZK State)               │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      RELAYER SERVICE                         │
-│  Express.js + Job Queue                                      │
-│  • Submit withdrawals (user pays 0.5% fee)                  │
-│  • Association set management                                │
-│  • Chain analysis integration                                │
-└─────────────────────────────────────────────────────────────┘
+privacy-vault/
+├── circuits/                    # Circom ZK Circuits
+│   └── vault/
+│       ├── withdraw.circom      # Anonymous withdrawal proof
+│       └── innocence.circom     # Proof of innocence
+│
+├── programs/                    # Solana Programs (Anchor)
+│   └── privacy-vault/
+│       └── src/lib.rs           # On-chain verifier + vault logic
+│
+├── frontend-lovable/            # React Frontend
+│   ├── src/
+│   │   ├── components/          # UI Components
+│   │   ├── hooks/               # usePrivacyVault hook
+│   │   └── lib/                 # ZK proof generation
+│   └── public/circuits/         # Compiled WASM + zkey
+│
+└── relayer/                     # Backend Service
+    ├── server.js                # Express API
+    └── association-sets.js      # Compliance sets
 ```
 
-## Tech Stack
+### Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Smart Contract | Anchor 0.31 + Light Protocol |
-| ZK Circuits | Circom 2.0 + Groth16 |
-| Frontend | React 18 + Vite + TailwindCSS |
-| Wallet | Solana Wallet Adapter |
-| Relayer | Node.js + Express |
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Smart Contract** | Anchor 0.31 + Light Protocol | On-chain vault + ZK verification |
+| **ZK Circuits** | Circom 2.0 + Groth16 | Proof generation |
+| **Frontend** | React 18 + Vite + TailwindCSS | User interface |
+| **Wallet** | Solana Wallet Adapter | Phantom, Solflare, etc. |
+| **Relayer** | Node.js + Express | Gas abstraction |
+
+---
 
 ## Deployed Contracts
 
-| Network | Program ID |
-|---------|------------|
-| Devnet | `9zvpj82hnzpjFhYGVL6tT3Bh3GBAoaJnVxe8ZsDqMwnu` |
+| Network | Program ID | Status |
+|---------|------------|--------|
+| **Devnet** | `9zvpj82hnzpjFhYGVL6tT3Bh3GBAoaJnVxe8ZsDqMwnu` | Live |
+| Mainnet | Coming Soon | - |
 
-[View on Solscan](https://solscan.io/account/9zvpj82hnzpjFhYGVL6tT3Bh3GBAoaJnVxe8ZsDqMwnu?cluster=devnet)
+<a href="https://solscan.io/account/9zvpj82hnzpjFhYGVL6tT3Bh3GBAoaJnVxe8ZsDqMwnu?cluster=devnet">
+  <img src="https://img.shields.io/badge/View%20on-Solscan-9945FF?style=for-the-badge&logo=solana" alt="View on Solscan"/>
+</a>
+
+---
 
 ## Association Sets
 
-Users can prove membership in curated "clean" sets:
+Prove membership in curated "clean" sets without revealing identity:
 
 | Set | Description | Use Case |
 |-----|-------------|----------|
-| ALL_VERIFIED | All non-flagged addresses | General privacy |
-| INSTITUTIONAL | KYC'd institutional users | Compliance-heavy |
-| COMMUNITY_CURATED | DAO-governed whitelist | DeFi participation |
-| US_COMPLIANT | OFAC-compliant addresses | US users |
-| EU_COMPLIANT | MiCA-compliant addresses | EU users |
+| `ALL_VERIFIED` | All non-flagged addresses | General privacy |
+| `INSTITUTIONAL` | KYC'd institutional users | Compliance-heavy environments |
+| `COMMUNITY_CURATED` | DAO-governed whitelist | DeFi participation |
+| `US_COMPLIANT` | OFAC-compliant addresses | US regulatory requirements |
+| `EU_COMPLIANT` | MiCA-compliant addresses | EU regulatory requirements |
+
+---
 
 ## Quick Start
 
+### Prerequisites
+
+- Node.js 18+
+- Rust + Anchor CLI (for contract development)
+- Solana CLI
+
+### Run Locally
+
 ```bash
-# Clone repository
-git clone https://github.com/your-org/privacy-vault
+# Clone the repository
+git clone https://github.com/Pavelevich/privacy-vault.git
 cd privacy-vault
 
 # Install frontend dependencies
 cd frontend-lovable
 npm install
 
-# Start frontend (port 3000)
+# Start the frontend (port 3000)
 npm run dev
 
-# In another terminal, start relayer (port 3001)
+# In a new terminal, start the relayer (port 3001)
 cd ../relayer
 npm install
 npm start
 ```
 
-## Project Structure
+### Get Devnet SOL
 
-```
-privacy-vault/
-├── circuits/           # Circom ZK circuits
-│   ├── withdraw.circom
-│   └── innocence.circom
-├── frontend-lovable/   # React frontend
-│   ├── src/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   └── lib/
-│   └── public/
-│       └── circuits/   # Compiled WASM + zkey files
-├── programs/           # Anchor smart contracts
-│   └── privacy-vault/
-│       └── src/lib.rs
-├── relayer/            # Backend relayer service
-│   ├── server.js
-│   └── association-sets.js
-└── tests/              # Integration tests
+```bash
+solana airdrop 2 --url devnet
 ```
 
-## Demo Flow
+Or use the faucet: https://faucet.solana.com
 
-1. **Connect Wallet** - Connect Phantom or Solflare
+---
+
+## Demo
+
+### User Flow
+
+1. **Connect** - Link your Phantom or Solflare wallet
 2. **Select Pool** - Choose denomination (0.1, 1, or 10 SOL)
 3. **Generate Note** - Create cryptographic commitment
-4. **Save Note** - Download the secret note JSON
-5. **Deposit** - Send SOL to the privacy pool
+4. **Save Note** - Download secret note JSON (required for withdrawal!)
+5. **Deposit** - Send SOL to privacy pool
 6. **Wait** - Let anonymity set grow
-7. **Withdraw** - Use secret note + ZK proof to withdraw
-8. **Prove Innocence** - Generate proof for compliance
+7. **Withdraw** - Use secret note + ZK proof
+8. **Prove Innocence** - Generate compliance proof if needed
 
-## Security Considerations
+### Supported Tokens
 
-- **Secret Note**: Required for withdrawal. Store securely - cannot be recovered!
-- **Anonymity Set**: Larger pools = better privacy. Wait for more deposits.
-- **Timing Analysis**: Avoid depositing and withdrawing close together.
-- **Amount Correlation**: Use fixed denominations to prevent amount-based linking.
+| Token | Denominations | Status |
+|-------|---------------|--------|
+| SOL | 0.1, 1, 10 | Live |
+| USDC | 10, 100, 1000 | Coming Soon |
+| TETSUO | 100, 1K, 10K | Coming Soon |
+| BONK | 1M, 10M, 100M | Coming Soon |
 
-## Research References
+---
 
-- [Privacy Pools](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4563364) - Buterin, Illum, et al.
-- [Tornado Cash](https://tornado.cash/audits/TornadoCash_circuit_audit_ABDK.pdf) - Original ZK mixer design
-- [Light Protocol](https://www.lightprotocol.com/) - Compressed accounts on Solana
+## Security
 
-## Hackathon
+### Best Practices
 
-Built for **Solana Privacy Hack 2026**
+| Do | Don't |
+|----|-------|
+| Save secret note securely | Share your secret note |
+| Use fixed denominations | Use custom amounts (smaller anonymity set) |
+| Wait between deposit/withdraw | Withdraw immediately after deposit |
+| Use relayer for max privacy | Pay gas from same wallet |
+
+### Audits
+
+- [ ] ZK Circuit Audit (Planned)
+- [ ] Smart Contract Audit (Planned)
+
+---
+
+## Research & References
+
+This project implements concepts from:
+
+- **[Privacy Pools](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4563364)** - Buterin, Illum, et al. (2023)
+- **[Tornado Cash](https://tornado.cash/audits/TornadoCash_circuit_audit_ABDK.pdf)** - Original ZK mixer design
+- **[Light Protocol](https://www.lightprotocol.com/)** - Compressed accounts on Solana
+
+---
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+
+```bash
+# Run tests
+cd frontend-lovable
+npm test
+
+# Build for production
+npm run build
+```
+
+---
 
 ## License
 
 MIT License - See [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  <strong>Built for Solana Privacy Hack 2026</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Pavelevich/privacy-vault">
+    <img src="https://img.shields.io/github/stars/Pavelevich/privacy-vault?style=social" alt="GitHub Stars"/>
+  </a>
+</p>
