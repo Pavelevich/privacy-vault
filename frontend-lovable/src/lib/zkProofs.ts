@@ -5,8 +5,27 @@
  * for the Privacy Vault system.
  */
 
-import { groth16 } from "snarkjs";
-import { buildPoseidon, Poseidon } from "circomlibjs";
+// Dynamic imports to avoid bundling issues
+let groth16Module: typeof import("snarkjs").groth16 | null = null;
+let buildPoseidonModule: typeof import("circomlibjs").buildPoseidon | null = null;
+
+async function getGroth16() {
+  if (!groth16Module) {
+    const snarkjs = await import("snarkjs");
+    groth16Module = snarkjs.groth16;
+  }
+  return groth16Module;
+}
+
+async function getBuildPoseidon() {
+  if (!buildPoseidonModule) {
+    const circomlibjs = await import("circomlibjs");
+    buildPoseidonModule = circomlibjs.buildPoseidon;
+  }
+  return buildPoseidonModule;
+}
+
+type Poseidon = Awaited<ReturnType<typeof import("circomlibjs").buildPoseidon>>;
 
 // Circuit file paths (relative to public folder)
 const WITHDRAW_WASM = "/circuits/withdraw.wasm";
@@ -24,6 +43,7 @@ let poseidon: Poseidon | null = null;
  */
 async function getPoseidon(): Promise<Poseidon> {
   if (!poseidon) {
+    const buildPoseidon = await getBuildPoseidon();
     poseidon = await buildPoseidon();
   }
   return poseidon;
@@ -208,6 +228,7 @@ export async function generateWithdrawProof(input: WithdrawProofInput): Promise<
   console.log("Generating withdraw proof...");
   console.time("Withdraw proof generation");
 
+  const groth16 = await getGroth16();
   const { proof, publicSignals } = await groth16.fullProve(
     circuitInputs,
     WITHDRAW_WASM,
@@ -267,6 +288,7 @@ export async function generateInnocenceProof(input: InnocenceProofInput): Promis
   console.log("Generating innocence proof...");
   console.time("Innocence proof generation");
 
+  const groth16 = await getGroth16();
   const { proof, publicSignals } = await groth16.fullProve(
     circuitInputs,
     INNOCENCE_WASM,

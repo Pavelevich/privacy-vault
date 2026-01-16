@@ -33,4 +33,21 @@ export default defineConfig(({ mode }) => ({
   define: {
     "process.env": {},
   },
+  optimizeDeps: {
+    exclude: ["snarkjs", "circomlibjs"],
+    esbuildOptions: {
+      target: "esnext",
+    },
+  },
+  build: {
+    target: "esnext",
+    minify: false,
+    sourcemap: false,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    rollupOptions: {
+      external: [],
+    },
+  },
 }));
