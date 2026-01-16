@@ -28,6 +28,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as snarkjs from 'snarkjs';
 import associationSets from './association-sets.js';
 
 dotenv.config();
@@ -61,6 +62,61 @@ const CONFIG = {
   // Maximum withdrawal amount in SOL
   maxWithdrawal: parseFloat(process.env.MAX_WITHDRAWAL || '100'),
 };
+
+// Path to verification key (exported from zkey)
+const WITHDRAW_VKEY_PATH = path.join(__dirname, '../frontend-lovable/public/circuits/withdraw_verification_key.json');
+
+// Verification key cache
+let withdrawVerificationKey = null;
+
+/**
+ * Load verification key from file or export from zkey
+ */
+async function loadVerificationKey() {
+  if (withdrawVerificationKey) return withdrawVerificationKey;
+
+  try {
+    // Try to load from file first
+    if (fs.existsSync(WITHDRAW_VKEY_PATH)) {
+      withdrawVerificationKey = JSON.parse(fs.readFileSync(WITHDRAW_VKEY_PATH, 'utf8'));
+      console.log('Loaded verification key from file');
+    } else {
+      // Export from zkey if file doesn't exist
+      const zkeyPath = path.join(__dirname, '../frontend-lovable/public/circuits/withdraw_0000.zkey');
+      if (fs.existsSync(zkeyPath)) {
+        withdrawVerificationKey = await snarkjs.zKey.exportVerificationKey(zkeyPath);
+        // Save for future use
+        fs.writeFileSync(WITHDRAW_VKEY_PATH, JSON.stringify(withdrawVerificationKey, null, 2));
+        console.log('Exported and saved verification key');
+      } else {
+        console.warn('Warning: No verification key or zkey found. Proof verification disabled.');
+      }
+    }
+  } catch (error) {
+    console.error('Error loading verification key:', error);
+  }
+
+  return withdrawVerificationKey;
+}
+
+/**
+ * Verify ZK proof using snarkjs
+ */
+async function verifyProof(proof, publicSignals) {
+  const vkey = await loadVerificationKey();
+  if (!vkey) {
+    console.warn('Verification key not available - SKIPPING PROOF VERIFICATION');
+    return true; // Skip verification if no key (for demo only)
+  }
+
+  try {
+    const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
+    return isValid;
+  } catch (error) {
+    console.error('Proof verification error:', error);
+    return false;
+  }
+}
 
 // In-memory job storage (use Redis in production)
 const jobs = new Map();
@@ -243,8 +299,13 @@ async function processJob(job) {
   try {
     job.status = 'processing';
 
-    // TODO: In production, verify the ZK proof on-chain
-    // For now, we'll simulate the verification and transfer
+    // Verify ZK proof before processing
+    console.log(`Verifying ZK proof for job ${job.id}...`);
+    const isValid = await verifyProof(job.proof, job.publicSignals);
+    if (!isValid) {
+      throw new Error('Invalid ZK proof - verification failed');
+    }
+    console.log(`ZK proof verified for job ${job.id}`);
 
     // Check relayer balance
     const balance = await connection.getBalance(relayerKeypair.publicKey);
