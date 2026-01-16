@@ -39,61 +39,27 @@ const getPhantomBrowseLink = () => {
 };
 
 const Index = () => {
-  const { publicKey, connected, disconnect, select, wallets, connect } = useWallet();
+  const { publicKey, connected, disconnect, wallets } = useWallet();
   const { setVisible } = useWalletModal();
   const [showMobileDialog, setShowMobileDialog] = useState(false);
 
   const walletAddress = publicKey?.toBase58() || "";
 
-  // Auto-connect when inside Phantom browser
+  // Log environment for debugging
   useEffect(() => {
-    const autoConnect = async () => {
-      try {
-        console.log("[CleanProof] Checking environment...", {
-          isMobile: isMobile(),
-          isInPhantom: isInPhantomBrowser(),
-          phantomAvailable: isPhantomAvailable(),
-          connected,
-          walletsCount: wallets.length
-        });
-
-        if (isInPhantomBrowser() && !connected && wallets.length > 0) {
-          console.log("[CleanProof] Inside Phantom browser, attempting auto-connect...");
-
-          const phantomWallet = wallets.find(w =>
-            w.adapter.name.toLowerCase().includes('phantom')
-          );
-
-          if (phantomWallet) {
-            console.log("[CleanProof] Found Phantom wallet, selecting...");
-            select(phantomWallet.adapter.name);
-
-            // Small delay to ensure wallet is selected
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            console.log("[CleanProof] Connecting...");
-            await connect();
-            console.log("[CleanProof] Connected successfully!");
-          }
-        }
-      } catch (error) {
-        console.error("[CleanProof] Auto-connect error:", error);
-        // Don't crash - just log the error
-      }
-    };
-
-    autoConnect();
-  }, [wallets, connected, select, connect]);
+    console.log("[CleanProof] Environment:", {
+      isMobile: isMobile(),
+      isInPhantom: isInPhantomBrowser(),
+      phantomAvailable: isPhantomAvailable(),
+      connected,
+      walletsCount: wallets.length,
+      walletNames: wallets.map(w => w.adapter.name)
+    });
+  }, [wallets, connected]);
 
   const handleConnect = useCallback(() => {
     hapticFeedback('light');
-
-    // On mobile, if Phantom not available and not in Phantom browser, show dialog
-    if (isMobile() && !isPhantomAvailable() && !isInPhantomBrowser()) {
-      setShowMobileDialog(true);
-      return;
-    }
-
+    // Always show wallet modal - WalletConnect works on mobile browsers
     setVisible(true);
   }, [setVisible]);
 
