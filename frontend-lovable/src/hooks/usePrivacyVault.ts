@@ -334,24 +334,35 @@ export function usePrivacyVault() {
 
         const transaction = new Transaction().add(withdrawInstruction);
 
-        // Get recent blockhash
-        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+        // Get fresh blockhash right before signing
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("finalized");
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = wallet.publicKey;
 
+        console.log("Withdraw transaction built, blockhash:", blockhash);
+
         // Sign and send
-        const signedTx = await wallet.signTransaction(transaction);
+        let signedTx;
+        try {
+          signedTx = await wallet.signTransaction(transaction);
+        } catch (signError) {
+          console.error("Wallet signing error:", signError);
+          throw new Error("Wallet signing failed. Please reconnect your wallet and try again.");
+        }
+
         const signature = await connection.sendRawTransaction(signedTx.serialize(), {
-          skipPreflight: false,
-          preflightCommitment: "confirmed",
-          maxRetries: 3,
+          skipPreflight: true, // Skip simulation to avoid "already processed" errors
+          preflightCommitment: "finalized",
+          maxRetries: 5,
         });
+
+        console.log("Withdraw transaction sent:", signature);
 
         await connection.confirmTransaction({
           signature,
           blockhash,
           lastValidBlockHeight,
-        }, "confirmed");
+        }, "finalized");
 
         console.log("Withdrawal transaction confirmed:", signature);
 
