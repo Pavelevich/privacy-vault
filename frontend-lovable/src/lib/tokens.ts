@@ -17,43 +17,16 @@ export interface TokenConfig {
   color: string;           // Brand color for UI
 }
 
-// Supported tokens
+// Supported tokens - Only SOL for now
 export const SUPPORTED_TOKENS: TokenConfig[] = [
   {
     symbol: "SOL",
     name: "Solana",
     mint: "So11111111111111111111111111111111111111112", // Native SOL wrapped
     decimals: 9,
-    logoUrl: "/tokens/sol.png",
+    logoUrl: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
     denominations: [0.1, 1, 10],
     color: "#9945FF",
-  },
-  {
-    symbol: "TETSUO",
-    name: "Tetsuo",
-    mint: "8i51XNNpGaKaj4G4nDdmQh95v4FKAxw8mhtaRoKd8Pum", // Devnet placeholder
-    decimals: 9,
-    logoUrl: "/tokens/tetsuo.png",
-    denominations: [100, 1000, 10000],
-    color: "#FF4444",
-  },
-  {
-    symbol: "USDC",
-    name: "USD Coin",
-    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // Mainnet USDC
-    decimals: 6,
-    logoUrl: "/tokens/usdc.png",
-    denominations: [10, 100, 1000],
-    color: "#2775CA",
-  },
-  {
-    symbol: "BONK",
-    name: "Bonk",
-    mint: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // Mainnet BONK
-    decimals: 5,
-    logoUrl: "/tokens/bonk.png",
-    denominations: [1000000, 10000000, 100000000],
-    color: "#FF9500",
   },
 ];
 

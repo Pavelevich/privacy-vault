@@ -233,6 +233,20 @@
     .glass-card {
       @apply rounded-xl;
     }
+
+    /* Hide scrollbar on mobile */
+    html, body, * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
   }
 
   /* Hide scrollbars but keep functionality */

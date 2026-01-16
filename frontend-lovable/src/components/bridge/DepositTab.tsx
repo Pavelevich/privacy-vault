@@ -3,17 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Copy, Download, AlertTriangle, Loader2, Check, Shield, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { usePrivacyVault, saveDepositNote, serializeDepositNote } from "@/hooks/usePrivacyVault";
 import { useToast } from "@/hooks/use-toast";
 import type { DepositNote } from "@/lib/zkProofs";
-import { SUPPORTED_TOKENS, getTokenBySymbol, formatTokenAmount, getPoolStats } from "@/lib/tokens";
+import { getTokenBySymbol, formatTokenAmount, getPoolStats } from "@/lib/tokens";
+import { hapticFeedback } from "@/lib/utils";
 
 interface DepositTabProps {
   isConnected: boolean;
@@ -72,6 +66,7 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
       const displayNote = `tetsuo-vault-${note.commitment.slice(0, 16)}...`;
       setSecretNote(displayNote);
 
+      hapticFeedback('success');
       toast({
         title: "Secret Note Generated",
         description: "Your ZK commitment has been created. Save it before depositing!",
@@ -95,6 +90,7 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
     const fullNote = serializeDepositNote(depositNote);
     await navigator.clipboard.writeText(fullNote);
     setCopied(true);
+    hapticFeedback('light');
     setTimeout(() => setCopied(false), 2000);
 
     toast({
@@ -168,6 +164,7 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
       // Save the deposit note locally
       saveDepositNote(result.note);
 
+      hapticFeedback('success');
       toast({
         title: "Deposit Successful!",
         description: `${depositAmount} SOL deposited. Transaction: ${result.signature?.slice(0, 8)}...`,
@@ -183,6 +180,7 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
       setDepositNote(null);
     } catch (error) {
       console.error("Deposit error:", error);
+      hapticFeedback('error');
       toast({
         title: "Deposit Failed",
         description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -194,6 +192,7 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
   };
 
   const handleDenomSelect = (value: number) => {
+    hapticFeedback('light');
     setSelectedDenom(value);
     setAmount(value.toString());
     setUseCustomAmount(false);
@@ -205,49 +204,23 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 space-y-4">
-        {/* Token Selector */}
-        <div className="bg-muted/30 rounded-xl p-4 space-y-2">
-          <span className="text-sm text-muted-foreground">Select Token</span>
-          <Select value={selectedToken} onValueChange={(value) => {
-            setSelectedToken(value);
-            setSelectedDenom(null);
-            setAmount("");
-            setSecretNote("");
-            setDepositNote(null);
-          }}>
-            <SelectTrigger className="bg-muted/50 border-0 focus:ring-0 h-12">
-              <SelectValue>
-                {currentToken && (
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ backgroundColor: currentToken.color + "30", color: currentToken.color }}
-                    >
-                      {currentToken.symbol.slice(0, 1)}
-                    </div>
-                    <span className="font-medium">{currentToken.symbol}</span>
-                    <span className="text-muted-foreground text-sm">{currentToken.name}</span>
-                  </div>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {SUPPORTED_TOKENS.map((token) => (
-                <SelectItem key={token.symbol} value={token.symbol}>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ backgroundColor: token.color + "30", color: token.color }}
-                    >
-                      {token.symbol.slice(0, 1)}
-                    </div>
-                    <span className="font-medium">{token.symbol}</span>
-                    <span className="text-muted-foreground text-sm">{token.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Token Display - SOL only */}
+        <div className="bg-muted/30 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            {currentToken && (
+              <>
+                <img
+                  src={currentToken.logoUrl}
+                  alt={currentToken.symbol}
+                  className="w-8 h-8 rounded-full"
+                />
+                <div>
+                  <span className="font-semibold text-lg">{currentToken.symbol}</span>
+                  <span className="text-muted-foreground text-sm ml-2">{currentToken.name}</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Fixed Denomination Pools */}
@@ -326,7 +299,9 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
                   placeholder="0.0"
                   value={amount}
                   onChange={(e) => {
-                    const value = e.target.value;
+                    let value = e.target.value;
+                    // Replace comma with period for decimal separator
+                    value = value.replace(',', '.');
                     // Only allow numbers and one decimal point
                     if (value === "" || /^\d*\.?\d*$/.test(value)) {
                       setAmount(value);
@@ -338,12 +313,11 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
                 <div className="flex items-center gap-2 bg-muted/50 px-3 py-2 rounded-lg">
                   {currentToken && (
                     <>
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: currentToken.color + "30", color: currentToken.color }}
-                      >
-                        {currentToken.symbol.slice(0, 1)}
-                      </div>
+                      <img
+                        src={currentToken.logoUrl}
+                        alt={currentToken.symbol}
+                        className="w-6 h-6 rounded-full"
+                      />
                       <span className="font-medium">{currentToken.symbol}</span>
                     </>
                   )}
@@ -364,11 +338,6 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
               {currentToken ? formatTokenAmount(balance, currentToken) : balance.toFixed(4)} {selectedToken}
             </span>
           </div>
-          {selectedToken !== "SOL" && (
-            <div className="text-xs text-amber-400/80 mt-1">
-              SPL token deposits coming soon
-            </div>
-          )}
         </div>
 
         {/* Generate Secret Note Button */}

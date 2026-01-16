@@ -74,9 +74,12 @@ export const Header = ({ isConnected, walletAddress, onConnect, onDisconnect }: 
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               onClick={onConnect}
-              className="gap-2 bg-primary hover:bg-primary/90 glow-button uppercase font-semibold tracking-wide"
+              size="sm"
+              className="gap-1.5 bg-primary hover:bg-primary/90 glow-button uppercase font-semibold tracking-wide text-xs sm:text-sm sm:gap-2 px-3 sm:px-4 h-9 sm:h-10"
             >
-              Connect Wallet
+              <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Connect Wallet</span>
+              <span className="sm:hidden">Connect</span>
             </Button>
           </motion.div>
         )}

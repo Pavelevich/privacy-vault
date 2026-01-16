@@ -5,6 +5,7 @@ import {
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
+  PhantomWalletAdapter,
   SolflareWalletAdapter,
   TorusWalletAdapter,
   LedgerWalletAdapter,
@@ -30,9 +31,10 @@ export const WalletProvider: FC<WalletProviderProps> = ({ children }) => {
   }, []);
 
   // Configure supported wallets
-  // Note: Phantom is auto-detected via Wallet Standard, no need to add explicitly
+  // Phantom added explicitly for better mobile support
   const wallets = useMemo(
     () => [
+      new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
       new TorusWalletAdapter(),
       new LedgerWalletAdapter(),

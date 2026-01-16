@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePrivacyVault } from "@/hooks/usePrivacyVault";
 import { useToast } from "@/hooks/use-toast";
+import { hapticFeedback } from "@/lib/utils";
 
 // Relayer configuration
 const RELAYER_FEE_PERCENT = 0.5; // 0.5% fee
@@ -92,6 +93,7 @@ export const WithdrawTab = ({ isConnected, walletAddress, onConnect }: WithdrawT
 
       if (result.success) {
         setWithdrawSuccess(true);
+        hapticFeedback('success');
         const txDescription = result.signature
           ? `Tx: ${result.signature.slice(0, 8)}...${result.signature.slice(-8)}`
           : `Funds sent to ${recipient.slice(0, 8)}...`;
@@ -109,6 +111,7 @@ export const WithdrawTab = ({ isConnected, walletAddress, onConnect }: WithdrawT
       }
     } catch (error) {
       console.error("Withdraw error:", error);
+      hapticFeedback('error');
       toast({
         title: "Withdrawal Failed",
         description: error instanceof Error ? error.message : "Unknown error occurred",
