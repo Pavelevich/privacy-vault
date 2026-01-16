@@ -328,7 +328,7 @@ export const DepositTab = ({ isConnected, onConnect }: DepositTabProps) => {
                     setAmount(e.target.value);
                     setSelectedDenom(null);
                   }}
-                  className="bg-transparent border-0 text-2xl font-medium flex-1 p-0 h-auto focus-visible:ring-0"
+                  className="bg-transparent border-0 border-b-2 border-transparent focus:border-primary text-2xl font-medium flex-1 p-0 h-auto focus-visible:ring-0 rounded-none transition-colors"
                 />
                 <div className="flex items-center gap-2 bg-muted/50 px-3 py-2 rounded-lg">
                   {currentToken && (
