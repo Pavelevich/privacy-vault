@@ -44,7 +44,7 @@ export const BridgeWidget = ({ isConnected, walletAddress, onConnect }: BridgeWi
   const tabs: { id: TabType; label: string }[] = [
     { id: "deposit", label: "DEPOSIT" },
     { id: "withdraw", label: "WITHDRAW" },
-    { id: "prove", label: "PROVE INNOCENCE" },
+    { id: "prove", label: "PROVE" },
   ];
 
   return (
