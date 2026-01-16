@@ -31,15 +31,20 @@ export const Header = ({ isConnected, walletAddress, onConnect, onDisconnect }: 
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4">
+    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-border/30">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center gap-3">
+        <a
+          href="https://dexscreener.com/solana/8i51xnnpgakaj4g4nddmqh95v4fkaxw8mhtarokd9te8"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        >
           <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg">
             <img src={logo} alt="Tetsuo" className="h-full w-full object-cover" />
           </div>
           <span className="text-lg font-semibold text-foreground tracking-tight">Tetsuo Privacy Vault</span>
-        </div>
+        </a>
 
         {/* Wallet Button */}
         {isConnected ? (

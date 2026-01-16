@@ -52,7 +52,7 @@ export const BridgeWidget = ({ isConnected, walletAddress, onConnect }: BridgeWi
       initial={{ opacity: 0, y: 20, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className="w-full max-w-lg mx-auto overflow-hidden bg-white rounded-2xl shadow-xl border border-gray-100"
+      className="w-full max-w-lg mx-auto overflow-hidden bg-white rounded-2xl shadow-xl border border-gray-100 mx-2 sm:mx-auto"
     >
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200 bg-white">
@@ -78,7 +78,7 @@ export const BridgeWidget = ({ isConnected, walletAddress, onConnect }: BridgeWi
         ))}
       </div>
 
-      <div className="p-6 h-[680px] bg-white relative overflow-hidden">
+      <div className="p-4 sm:p-6 h-[calc(100dvh-220px)] sm:h-[680px] max-h-[680px] bg-white relative overflow-hidden">
         <AnimatePresence mode="wait">
           {activeTab === "deposit" && (
             <motion.div

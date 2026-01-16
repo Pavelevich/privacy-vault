@@ -120,15 +120,37 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
 
   html {
     scroll-behavior: smooth;
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior: none;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Space Grotesk', system-ui, sans-serif;
+    /* Prevent text selection on mobile for app-like feel */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Safe area for notched devices */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Allow text selection in inputs and textareas */
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Smooth scrolling containers */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -179,5 +201,47 @@
 
   .swap-rotate {
     animation: swap-rotate 0.3s ease-out;
+  }
+
+  /* Safe area utilities for notched devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Mobile-specific improvements */
+  @media (max-width: 640px) {
+    /* Larger touch targets */
+    button, a {
+      min-height: 44px;
+    }
+
+    /* Better mobile text sizing */
+    html {
+      font-size: 16px;
+    }
+
+    /* Prevent zoom on input focus */
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+
+    /* Full-width cards on mobile */
+    .glass-card {
+      @apply rounded-xl;
+    }
+  }
+
+  /* Hide scrollbars but keep functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
