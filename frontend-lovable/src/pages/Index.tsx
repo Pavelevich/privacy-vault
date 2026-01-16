@@ -21,29 +21,52 @@ const isMobile = () => {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 };
 
-// Check if Phantom is available
+// Check if Phantom is available (injected in browser)
 const isPhantomAvailable = () => {
   return typeof window !== "undefined" && window.phantom?.solana?.isPhantom;
 };
 
+// Check if we're inside Phantom's browser
+const isInPhantomBrowser = () => {
+  return typeof window !== "undefined" &&
+    (window.phantom?.solana?.isPhantom || navigator.userAgent.includes('Phantom'));
+};
+
 // Get Phantom deep link to open current URL in Phantom browser
-const getPhantomDeepLink = () => {
+const getPhantomBrowseLink = () => {
   const currentUrl = encodeURIComponent(window.location.href);
   return `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`;
 };
 
 const Index = () => {
-  const { publicKey, connected, disconnect } = useWallet();
+  const { publicKey, connected, disconnect, select, wallets, connect } = useWallet();
   const { setVisible } = useWalletModal();
   const [showMobileDialog, setShowMobileDialog] = useState(false);
 
   const walletAddress = publicKey?.toBase58() || "";
 
+  // Auto-connect when inside Phantom browser
+  useEffect(() => {
+    if (isInPhantomBrowser() && !connected && wallets.length > 0) {
+      // Find Phantom wallet and connect
+      const phantomWallet = wallets.find(w =>
+        w.adapter.name.toLowerCase().includes('phantom')
+      );
+      if (phantomWallet) {
+        select(phantomWallet.adapter.name);
+        // Small delay to ensure wallet is selected
+        setTimeout(() => {
+          connect().catch(console.error);
+        }, 100);
+      }
+    }
+  }, [wallets, connected, select, connect]);
+
   const handleConnect = useCallback(() => {
     hapticFeedback('light');
 
-    // On mobile, if Phantom not available, show dialog
-    if (isMobile() && !isPhantomAvailable()) {
+    // On mobile, if Phantom not available and not in Phantom browser, show dialog
+    if (isMobile() && !isPhantomAvailable() && !isInPhantomBrowser()) {
       setShowMobileDialog(true);
       return;
     }
@@ -53,7 +76,7 @@ const Index = () => {
 
   const handleOpenInPhantom = useCallback(() => {
     hapticFeedback('medium');
-    window.location.href = getPhantomDeepLink();
+    window.location.href = getPhantomBrowseLink();
   }, []);
 
   const handleDisconnect = useCallback(() => {
@@ -70,7 +93,7 @@ const Index = () => {
               Connect on Mobile
             </DialogTitle>
             <DialogDescription className="text-left">
-              To connect your wallet on mobile, open this app inside Phantom's browser.
+              Safari and Chrome on iOS cannot connect directly to wallets. Tap below to open this app in Phantom where your wallet will connect automatically.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 pt-2">
@@ -83,7 +106,7 @@ const Index = () => {
                 alt="Phantom"
                 className="h-5 w-5 mr-2 invert"
               />
-              Open in Phantom
+              Continue in Phantom App
             </Button>
             <p className="text-xs text-muted-foreground text-center">
               Don't have Phantom?{" "}
