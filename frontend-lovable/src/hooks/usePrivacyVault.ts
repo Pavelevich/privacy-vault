@@ -85,6 +85,11 @@ export function usePrivacyVault() {
         throw new Error("Wallet not connected");
       }
 
+      // Prevent double submission
+      if (isLoading) {
+        throw new Error("Transaction already in progress");
+      }
+
       setIsLoading(true);
 
       try {
@@ -118,8 +123,8 @@ export function usePrivacyVault() {
           })
         );
 
-        // Get recent blockhash
-        const { blockhash } = await connection.getLatestBlockhash();
+        // Get recent blockhash with commitment
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = wallet.publicKey;
 
@@ -132,8 +137,17 @@ export function usePrivacyVault() {
           throw new Error("Wallet signing failed. Please reconnect your wallet and try again.");
         }
 
-        const signature = await connection.sendRawTransaction(signedTx.serialize());
-        await connection.confirmTransaction(signature, "confirmed");
+        const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+          skipPreflight: false,
+          preflightCommitment: "confirmed",
+          maxRetries: 3,
+        });
+
+        await connection.confirmTransaction({
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        }, "confirmed");
 
         console.log("Deposit transaction confirmed:", signature);
 
