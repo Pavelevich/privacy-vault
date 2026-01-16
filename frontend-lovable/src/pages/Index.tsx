@@ -47,19 +47,42 @@ const Index = () => {
 
   // Auto-connect when inside Phantom browser
   useEffect(() => {
-    if (isInPhantomBrowser() && !connected && wallets.length > 0) {
-      // Find Phantom wallet and connect
-      const phantomWallet = wallets.find(w =>
-        w.adapter.name.toLowerCase().includes('phantom')
-      );
-      if (phantomWallet) {
-        select(phantomWallet.adapter.name);
-        // Small delay to ensure wallet is selected
-        setTimeout(() => {
-          connect().catch(console.error);
-        }, 100);
+    const autoConnect = async () => {
+      try {
+        console.log("[CleanProof] Checking environment...", {
+          isMobile: isMobile(),
+          isInPhantom: isInPhantomBrowser(),
+          phantomAvailable: isPhantomAvailable(),
+          connected,
+          walletsCount: wallets.length
+        });
+
+        if (isInPhantomBrowser() && !connected && wallets.length > 0) {
+          console.log("[CleanProof] Inside Phantom browser, attempting auto-connect...");
+
+          const phantomWallet = wallets.find(w =>
+            w.adapter.name.toLowerCase().includes('phantom')
+          );
+
+          if (phantomWallet) {
+            console.log("[CleanProof] Found Phantom wallet, selecting...");
+            select(phantomWallet.adapter.name);
+
+            // Small delay to ensure wallet is selected
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            console.log("[CleanProof] Connecting...");
+            await connect();
+            console.log("[CleanProof] Connected successfully!");
+          }
+        }
+      } catch (error) {
+        console.error("[CleanProof] Auto-connect error:", error);
+        // Don't crash - just log the error
       }
-    }
+    };
+
+    autoConnect();
   }, [wallets, connected, select, connect]);
 
   const handleConnect = useCallback(() => {
